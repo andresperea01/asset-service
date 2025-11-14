@@ -180,4 +180,19 @@ public class AssetController {
                         "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
+    // GET - Obtener límites de tamaño
+    @GetMapping("/limits")
+    @Operation(summary = "Obtener límites de tamaño", description = "Retorna los límites de tamaño por tipo de archivo")
+    public ResponseEntity<Map<String, Object>> getFileSizeLimits() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("limits", fileSizeLimits.getAllLimits());
+        response.put("descriptions", Map.of(
+                "PDF", fileSizeLimits.getPdf(),
+                "IMAGE", fileSizeLimits.getImage(),
+                "VIDEO", fileSizeLimits.getVideo()
+        ));
+
+        return ResponseEntity.ok(response);
+    }
 }
