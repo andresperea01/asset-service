@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Upload - Drag & Drop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* Zona de Drag & Drop */
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        .drop-zone.dragover {
+            background: #e0e7ff;
+            border-color: #4f46e5;
+            transform: scale(1.02);
+        }
+
+        .drop-zone-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone-text {
+            font-size: 18px;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .drop-zone-hint {
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* Formulario */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Preview de archivos */
+        .preview-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .preview-container.active {
+            display: block;
+        }
+
+        .preview-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .file-preview {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .file-icon {
+            font-size: 40px;
+            margin-right: 15px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .file-remove {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Barra de progreso */
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Límites de tamaño */
+        .limits-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .limits-title {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .limits-list {
+            font-size: 14px;
+            color: #856404;
+        }
+
+        /* Mensajes */
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .message.active {
+            display: block;
+        }
+
+        .message.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        /* Preview de imágenes */
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📁 Asset Upload System</h1>
+    <p class="subtitle">Arrastra y suelta tus archivos o haz click para seleccionar</p>
+
+    <!-- Información de límites -->
+    <div class="limits-info">
+        <div class="limits-title">⚠️ Límites de Tamaño</div>
+        <div class="limits-list" id="limits-list">Cargando límites...</div>
+    </div>
+
+    <!-- Zona de Drag & Drop -->
+    <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">📤</div>
+        <div class="drop-zone-text">Arrastra y suelta tu archivo aquí</div>
+        <div class="drop-zone-hint">o haz click para seleccionar (PDF, Imágenes, Videos)</div>
+        <input type="file" id="fileInput" accept=".pdf,image/*,video/*">
+    </div>
+
+    <!-- Preview de archivo -->
+    <div class="preview-container" id="previewContainer">
+        <div class="preview-title">📋 Archivo Seleccionado</div>
+        <div id="filePreview"></div>
+    </div>
+
+    <!-- Formulario -->
+    <form id="uploadForm">
+        <div class="form-group">
+            <label for="assetName">Nombre del Asset *</label>
+            <input type="text" id="assetName" required placeholder="Ej: Documento importante">
+        </div>
+
+        <div class="form-group">
+            <label for="assetDescription">Descripción</label>
+            <textarea id="assetDescription" placeholder="Describe brevemente el contenido..."></textarea>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="ovaId">ID del OVA</label>
+                <input type="text" id="ovaId" placeholder="Ej: OVA-001">
+            </div>
+
+            <div class="form-group">
+                <label for="ovaName">Nombre del OVA</label>
+                <input type="text" id="ovaName" placeholder="Ej: Matemáticas Básicas">
+            </div>
+        </div>
+
+        <button type="submit" class="btn" id="uploadBtn">
+            🚀 Subir Archivo
+        </button>
+    </form>
+
+    <!-- Barra de progreso -->
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar-bg">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+        <div class="progress-text" id="progressText">Subiendo archivo...</div>
+    </div>
+
+    <!-- Mensajes -->
+    <div class="message" id="message"></div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api/assets';
+    let selectedFile = null;
+
+    // Elementos del DOM
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const previewContainer = document.getElementById('previewContainer');
+    const filePreview = document.getElementById('filePreview');
+    const uploadForm = document.getElementById('uploadForm');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const message = document.getElementById('message');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const limitsListEl = document.getElementById('limits-list');
+
+    // Cargar límites de tamaño
+    async function loadLimits() {
+        try {
+            const response = await fetch(`${API_URL}/limits`);
+            const data = await response.json();
+
+            if (data.success) {
+                const limits = data.descriptions;
+                limitsListEl.innerHTML = `
+                        📄 PDF: máx. ${limits.PDF} |
+                        🖼️ Imágenes: máx. ${limits.IMAGE} |
+                        🎥 Videos: máx. ${limits.VIDEO}
+                    `;
+            }
+        } catch (error) {
+            limitsListEl.innerHTML = '❌ No se pudieron cargar los límites';
+        }
+    }
+
+    // Drag & Drop Events
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    // Manejar selección de archivo
+    function handleFileSelect(file) {
+        selectedFile = file;
+        displayFilePreview(file);
+        previewContainer.classList.add('active');
+    }
+
+    // Mostrar preview del archivo
+    function displayFilePreview(file) {
+        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+        const fileIcon = getFileIcon(file.type);
+
+        let previewHTML = `
+                <div class="file-preview">
+                    <div class="file-icon">${fileIcon}</div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${fileSize} MB</div>
+                    </div>
+                    <button type="button" class="file-remove" onclick="removeFile()">❌ Quitar</button>
+                </div>
+            `;
+
+        // Si es imagen, mostrar preview
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewHTML += `<img src="${e.target.result}" class="image-preview" alt="Preview">`;
+                filePreview.innerHTML = previewHTML;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            filePreview.innerHTML = previewHTML;
+        }
+    }
+
+    // Obtener icono según tipo de archivo
+    function getFileIcon(fileType) {
+        if (fileType.includes('pdf')) return '📄';
+        if (fileType.startsWith('image/')) return '🖼️';
+        if (fileType.startsWith('video/')) return '🎥';
+        return '📎';
+    }
+
+    // Quitar archivo
+    function removeFile() {
+        selectedFile = null;
+        previewContainer.classList.remove('active');
+        fileInput.value = '';
+    }
+
+    // Subir archivo
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!selectedFile) {
+            showMessage('Por favor selecciona un archivo', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('name', document.getElementById('assetName').value);
+        formData.append('description', document.getElementById('assetDescription').value || '');
+        formData.append('ovaId', document.getElementById('ovaId').value || '');
+        formData.append('ovaName', document.getElementById('ovaName').value || '');
+
+        try {
+            uploadBtn.disabled = true;
+            progressContainer.classList.add('active');
+
+            const xhr = new XMLHttpRequest();
+
+            // Progreso de upload
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    updateProgress(percentComplete);
+                }
+            });
+
+            // Cuando termine
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 201) {
+                    const response = JSON.parse(xhr.responseText);
+                    showMessage('✅ Archivo subido exitosamente!', 'success');
+                    resetForm();
+                } else {
+                    const error = JSON.parse(xhr.responseText);
+                    showMessage(`❌ Error: ${error.message || 'Error al subir archivo'}`, 'error');
+                }
+                uploadBtn.disabled = false;
+                progressContainer.classList.remove('active');
+            });
+
+            // Error
+            xhr.addEventListener('error', () => {
+                showMessage('❌ Error de conexión', 'error');
+                uploadBtn.disabled = false;
+                progressContainer.classList.remove('active');
+            });
+
+            xhr.open('POST', API_URL);
+            xhr.send(formData);
+
+        } catch (error) {
+            showMessage('❌ Error al subir archivo', 'error');
+            uploadBtn.disabled = false;
+            progressContainer.classList.remove('active');
+        }
+    });
+
+    // Actualizar barra de progreso
+    function updateProgress(percent) {
+        const rounded = Math.round(percent);
+        progressBar.style.width = `${rounded}%`;
+        progressBar.textContent = `${rounded}%`;
+        progressText.textContent = `Subiendo archivo... ${rounded}%`;
+    }
+
+    // Mostrar mensaje
+    function showMessage(text, type) {
+        message.textContent = text;
+        message.className = `message ${type} active`;
+
+        setTimeout(() => {
+            message.classList.remove('active');
+        }, 5000);
+    }
+
+    // Resetear formulario
+    function resetForm() {
+        uploadForm.reset();
+        removeFile();
+        updateProgress(0);
+    }
+
+    // Cargar límites al iniciar
+    loadLimits();
+</script>
+</body>
+</html>

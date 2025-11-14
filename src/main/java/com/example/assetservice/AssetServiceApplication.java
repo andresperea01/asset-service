@@ -20,6 +20,7 @@ public class AssetServiceApplication {
         System.out.println("📄 Swagger UI: http://localhost:8080/swagger-ui.html");
         System.out.println("💾 H2 Console: http://localhost:8080/h2-console");
         System.out.println("📡 API Docs: http://localhost:8080/api-docs");
+        System.out.println("📤 Upload Page: http://localhost:8080/upload.html");
         System.out.println("=========================================\n");
     }
 }

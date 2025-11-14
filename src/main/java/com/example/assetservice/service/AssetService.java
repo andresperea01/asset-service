@@ -1,5 +1,7 @@
 package com.example.assetservice.service;
 
+import com.example.assetservice.config.FileSizeLimits;
+import com.example.assetservice.exception.FileStorageException;
 import com.example.assetservice.exception.ResourceNotFoundException;
 import com.example.assetservice.model.Asset;
 import com.example.assetservice.model.AssetDTO;
@@ -21,12 +23,18 @@ public class AssetService {
     @Autowired
     private FileStorageService fileStorageService;
 
-    // CREATE - Crear asset con archivo
-    public AssetDTO createAsset(String name, String description, MultipartFile file) {
+    @Autowired
+    private FileSizeLimits fileSizeLimits;
+
+    // CREATE - Crear asset con archivo y OVA
+    public AssetDTO createAsset(String name, String description, MultipartFile file, String ovaId, String ovaName) {
+
+        // Validar tamaño del archivo según categoría
+        String category = fileStorageService.getFileCategory(file.getContentType());
+        validateFileSize(file, category);
 
         // Guardar archivo
         String fileName = fileStorageService.storeFile(file);
-        String category = fileStorageService.getFileCategory(file.getContentType());
 
         // Crear entidad
         Asset asset = new Asset();
@@ -37,10 +45,38 @@ public class AssetService {
         asset.setFileType(file.getContentType());
         asset.setFileSize(file.getSize());
         asset.setCategory(category);
+        asset.setOvaId(ovaId);
+        asset.setOvaName(ovaName);
 
         Asset savedAsset = assetRepository.save(asset);
 
         return convertToDTO(savedAsset);
+    }
+
+    // Validar tamaño del archivo
+    private void validateFileSize(MultipartFile file, String category) {
+        long maxSize;
+
+        switch (category) {
+            case "PDF":
+                maxSize = fileSizeLimits.getPdfBytes();
+                break;
+            case "IMAGE":
+                maxSize = fileSizeLimits.getImageBytes();
+                break;
+            case "VIDEO":
+                maxSize = fileSizeLimits.getVideoBytes();
+                break;
+            default:
+                maxSize = 100 * 1024 * 1024; // 100MB por defecto
+        }
+
+        if (file.getSize() > maxSize) {
+            throw new FileStorageException(
+                    String.format("El archivo excede el tamaño máximo permitido para %s: %d MB",
+                            category, maxSize / (1024 * 1024))
+            );
+        }
     }
 
     // READ - Obtener todos los assets
@@ -77,16 +113,19 @@ public class AssetService {
     }
 
     // UPDATE - Actualizar asset con nuevo archivo
-    public AssetDTO updateAssetWithFile(Long id, String name, String description, MultipartFile file) {
+    public AssetDTO updateAssetWithFile(Long id, String name, String description, MultipartFile file, String ovaId, String ovaName) {
         Asset asset = assetRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset no encontrado con id: " + id));
+
+        // Validar tamaño del archivo
+        String category = fileStorageService.getFileCategory(file.getContentType());
+        validateFileSize(file, category);
 
         // Eliminar archivo anterior
         fileStorageService.deleteFile(asset.getFilePath());
 
         // Guardar nuevo archivo
         String fileName = fileStorageService.storeFile(file);
-        String category = fileStorageService.getFileCategory(file.getContentType());
 
         // Actualizar datos
         asset.setName(name);
@@ -96,6 +135,8 @@ public class AssetService {
         asset.setFileType(file.getContentType());
         asset.setFileSize(file.getSize());
         asset.setCategory(category);
+        asset.setOvaId(ovaId);
+        asset.setOvaName(ovaName);
 
         Asset updatedAsset = assetRepository.save(asset);
         return convertToDTO(updatedAsset);

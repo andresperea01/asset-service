@@ -30,4 +30,8 @@ public class AssetDTO {
     private LocalDateTime updatedDate;
     private String category;
     private String downloadUrl;
+    private String ovaId;
+    private String ovaName;
+    private String thumbnailPath;
+    private String previewUrl;
 }

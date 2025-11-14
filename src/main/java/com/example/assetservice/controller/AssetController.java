@@ -1,5 +1,6 @@
 package com.example.assetservice.controller;
 
+import com.example.assetservice.config.FileSizeLimits;
 import com.example.assetservice.model.AssetDTO;
 import com.example.assetservice.service.AssetService;
 import com.example.assetservice.service.FileStorageService;
@@ -33,15 +34,20 @@ public class AssetController {
     @Autowired
     private FileStorageService fileStorageService;
 
+    @Autowired
+    private FileSizeLimits fileSizeLimits;
+
     // POST - Crear nuevo asset con archivo
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Crear nuevo asset", description = "Crea un asset con archivo (PDF, imagen o video)")
     public ResponseEntity<Map<String, Object>> createAsset(
             @RequestParam("name") String name,
             @RequestParam(value = "description", required = false) String description,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "ovaId", required = false) String ovaId,
+            @RequestParam(value = "ovaName", required = false) String ovaName) {
 
-        AssetDTO createdAsset = assetService.createAsset(name, description, file);
+        AssetDTO createdAsset = assetService.createAsset(name, description, file, ovaId, ovaName);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -121,9 +127,11 @@ public class AssetController {
             @PathVariable Long id,
             @RequestParam("name") String name,
             @RequestParam(value = "description", required = false) String description,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "ovaId", required = false) String ovaId,
+            @RequestParam(value = "ovaName", required = false) String ovaName) {
 
-        AssetDTO updatedAsset = assetService.updateAssetWithFile(id, name, description, file);
+        AssetDTO updatedAsset = assetService.updateAssetWithFile(id, name, description, file, ovaId, ovaName);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);

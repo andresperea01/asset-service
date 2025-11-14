@@ -31,10 +31,10 @@ public class Asset {
     private String filePath;
 
     @Column(nullable = false)
-    private String fileType; // application/pdf, image/jpeg, video/mp4, etc.
+    private String fileType;
 
     @Column(nullable = false)
-    private Long fileSize; // en bytes
+    private Long fileSize;
 
     @Column(nullable = false)
     private LocalDateTime uploadDate;
@@ -42,7 +42,16 @@ public class Asset {
     private LocalDateTime updatedDate;
 
     @Column(nullable = false)
-    private String category; // PDF, IMAGE, VIDEO
+    private String category;
+
+    @Column(name = "ova_id")
+    private String ovaId; // ID del OVA asociado
+
+    @Column(name = "ova_name")
+    private String ovaName; // Nombre del OVA
+
+    @Column(name = "thumbnail_path")
+    private String thumbnailPath; // Ruta de la miniatura/preview
 
     @PrePersist
     protected void onCreate() {
